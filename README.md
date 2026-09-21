@@ -42,7 +42,7 @@ docker compose version
 pnpm install --frozen-lockfile
 ```
 
-Повне відтворення з чистого checkout ще не підтверджене: автоматичного seed немає, демонстраційні дані потрібно створити вручну.
+Локальний запуск із чистого checkout перевірено з окремою БД та мінімальними demo-даними: [звіт і межі перевірки](./docs/clean-check-verification.md). Автоматичного seed немає, демонстраційні дані потрібно створити вручну. Створіть env-файли перед build: Dashboard завантажує Vendure config і потребує його змінних навіть під час збірки.
 
 ## Environment variables
 
@@ -304,9 +304,9 @@ pnpm --filter @karpaty-gear/storefront exec node --env-file=.env .output/server/
 
 ### Межі перевірки production
 
-Підтверджені збірки Vendure Dashboard/Server/Worker і storefront, локальний запуск зібраного storefront та його E2E з локальним Vendure. Повний smoke test зі зібраними Vendure Server/Worker ще попереду.
+Підтверджені збірки Vendure Dashboard/Server/Worker і storefront, health endpoints зібраних Server/Worker та 3 cart E2E зі зібраним стеком у чистій копії. Vendure працював із `APP_ENV=dev`; production env і deployment ще не перевірені.
 
-Наявні команди для майбутньої перевірки зібраного Vendure:
+Команди запуску зібраного Vendure:
 
 ```powershell
 pnpm --filter @karpaty-gear/commerce start:server
@@ -331,4 +331,4 @@ pnpm --filter @karpaty-gear/commerce start:worker
 
 [NEXT_STEPS.md](./NEXT_STEPS.md) містить актуальний checklist, [PROJECT_PLAN.md](./PROJECT_PLAN.md) — повну архітектуру, [product brief](./docs/product-brief.md) — scope магазину.
 
-Stage 0 ще не завершено: потрібні перевірка чистого checkout, повний production smoke test, перевірка client bundle на secrets та завершення setup/ADR. CI, відтворюваний seed, offline codegen schema і Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.
+Stage 0 перевірено локально: чистий checkout, lint/format/typecheck, зібраний стек, міграція окремої БД та 3 cart E2E пройдені; setup/ADR і перевірку публічної збірки на секрети виконано. CI, відтворюваний seed, offline codegen schema, production-конфігурація та Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.

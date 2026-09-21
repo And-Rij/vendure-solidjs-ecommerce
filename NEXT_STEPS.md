@@ -2,7 +2,7 @@
 
 > Поточний milestone: **Stage 0 — Foundation spike**  
 > Детальна архітектура: [PROJECT_PLAN.md](./PROJECT_PLAN.md)  
-> Статус: **SSR і guest cart перевірено, 3 E2E-тести проходять через Turbo; наступний етап — lint, форматування та документація запуску. Stage 0 ще не завершено.**  
+> Статус: **Stage 0 перевірено локально: чистий checkout, форматування, lint, typecheck, builds, міграція порожньої БД і 3 E2E на зібраному стеку пройдені. Production deployment ще не перевірений.**  
 > Останнє оновлення: **2026-09-21**.
 
 ### Поточна точка
@@ -28,9 +28,10 @@
 - [x] Storefront production build і локальний запуск зібраного Node-сервера працюють.
 - [x] Playwright перевіряє збереження кошика, cookie flags, ізоляцію сесій і незмінність кошика після неіснуючого variant ID: **3 passed**.
 - [x] Коренева команда `pnpm run test:e2e` проходить через Turbo: **5 successful, 5 total**; E2E виконується з `cache bypass`.
-- [ ] Наступне: налаштувати реальні lint tasks і перевірку форматування, потім актуалізувати README.
+- [x] Налаштовано lint для всіх трьох пакетів, перевірку форматування та README запуску.
+- [x] Чисту копію перевірено з окремою PostgreSQL, зібраними Server/Worker і трьома E2E; див. `docs/clean-check-verification.md`.
 
-**Межа готовності:** основний SSR/cart flow працює у локальній production-збірці storefront. Ще не підтверджені запуск усього стеку зі зібраним Vendure, відтворення з чистого checkout, перевірка client bundle на secrets та deployment у Docker/Dokploy. Lint, форматування й документація залишаються відкритими. Результати тестів і збірок підтверджені наданими користувачем логами; це не новий запуск під час оновлення документа.
+**Межа готовності:** SSR/cart flow перевірено у чистій копії зі зібраними storefront і Vendure Server/Worker та окремою БД. Форматування, lint, typecheck, codegen і builds пройдені; публічну збірку основної копії перевірено на значення секретів. Vendure працював із `APP_ENV=dev`; production-конфігурація, HTTPS/reverse proxy та deployment у Docker/Dokploy залишаються відкритими. Demo-дані створено через Admin API, автоматичного seed у репозиторії ще немає.
 
 ## 1. Мета поточного етапу
 
@@ -90,15 +91,15 @@ Product brief зафіксовано у [`docs/product-brief.md`](./docs/product
 - [x] додати `.gitignore`;
 - [x] додати `.editorconfig` і безпечні `.env.example` для root та apps; прибрати дублікати й Compose-only змінну з commerce example та додати PORT у storefront example;
 - [x] створити `apps/storefront`, `apps/commerce` і `docs`;
-- [ ] створити `docs/adr` та `infra/compose`, якщо останній каталог справді буде використовуватися;
+- [x] створити `docs/adr`; `infra/compose` поки не потрібен, використовується кореневий `compose.yaml`;
 - [x] додати root scripts для `dev`, `build`, `lint`, `format` і `typecheck`;
 - [x] додати root `test:e2e` script і package-level `test:e2e` для storefront;
 - [x] налаштувати Turbo `test:e2e`: `dependsOn: ["build", "typecheck"]`, `cache: false`, `outputs: []`;
-- [ ] додати реальні package-level lint tasks (сама коренева команда `lint` ще не підтверджує перевірку коду);
-- [ ] додати перевірку форматування без перезапису файлів і без обробки generated/build output;
+- [x] додати реальні package-level lint tasks для трьох пакетів;
+- [x] додати перевірку форматування без перезапису файлів і без обробки generated/build output;
 - [x] увімкнути TypeScript strict і Prettier;
-- [ ] додати та перевірити єдині lint rules;
-- [ ] створити короткий root `README.md` з prerequisites та командами запуску.
+- [x] додати та перевірити єдині lint rules;
+- [x] створити root `README.md` з prerequisites та командами запуску.
 
 Цільова мінімальна структура після цього кроку:
 
@@ -176,7 +177,7 @@ Date: YYYY-MM-DD
 - [x] створити один Product, один ProductVariant, ціну, stock, facet і collection;
 - [x] перевірити `product(slug: ...)` безпосередньо через Shop API;
 - [x] перевірити `collection(slug: ...)` безпосередньо через Shop API;
-- [ ] записати точні команди setup/run у README.
+- [x] записати точні команди setup/run у README.
 
 На цьому кроці використовувати:
 
@@ -264,8 +265,8 @@ apps/storefront/src/
 
 ### Крок 7 — Перевірити production build
 
-- [ ] зупинити reliance на випадкові local-only налаштування;
-- [ ] виконати format check і lint;
+- [x] перевірити запуск із шаблонів env у чистій копії; особливості ізоляції задокументовані у звіті;
+- [x] виконати format check і lint;
 - [x] виконати typecheck для commerce і storefront (у наданому Turbo-лозі commerce — cache hit);
 - [x] виконати 3 E2E-тести session/cart flow на зібраному storefront;
 - [x] зібрати production build Vendure Server;
@@ -273,9 +274,9 @@ apps/storefront/src/
 - [x] зібрати Vendure Dashboard;
 - [x] зібрати production build SolidStart;
 - [x] локально запустити зібраний storefront і перевірити товар, кошик та нову сесію;
-- [ ] запустити також зібрані Vendure Server/Worker і повторити smoke test всього production-стеку;
-- [ ] перевірити, що client bundle не містить secrets або Vendure bearer token;
-- [ ] записати відомі обмеження spike у README.
+- [x] запустити зібрані Vendure Server/Worker і повторити smoke test зібраного стеку локально (Vendure `APP_ENV=dev`, не production deployment);
+- [x] перевірити публічну збірку на значення секретів і відсутність серверного session-коду; runtime bearer token не повертається action;
+- [x] записати відомі обмеження spike у README.
 
 Окремо перевірити production output обраного Nitro 3 Node preset у Docker/Dokploy. `vite preview` підходить лише для локальної перевірки build і не є production start command.
 
@@ -324,8 +325,8 @@ Stage 0 complete
 
 Stage 0 можна позначити завершеним тільки коли одночасно виконано все:
 
-- [ ] `pnpm install` працює з чистого checkout;
-- [ ] PostgreSQL стартує однією documented командою;
+- [x] `pnpm install --frozen-lockfile` працює з чистого checkout;
+- [x] PostgreSQL стартує однією documented командою;
 - [x] Vendure migration виконується на чистій database;
 - [x] Vendure Server, Worker і Dashboard запускаються;
 - [x] demo Product/Variant доступний через Shop API;
@@ -335,10 +336,10 @@ Stage 0 можна позначити завершеним тільки коли
 - [x] cart переживає reload;
 - [x] інша browser session ізольована;
 - [x] typecheck commerce/storefront, 3 cart E2E-тести і production builds проходять;
-- [ ] format check і lint проходять;
-- [ ] client bundle перевірено на відсутність secrets;
-- [ ] smoke test зі зібраними storefront та Vendure Server/Worker пройдено;
-- [ ] README дозволяє повторити результат із чистого checkout.
+- [x] format check і lint проходять;
+- [x] client bundle перевірено на значення secrets;
+- [x] smoke test зі зібраними storefront та Vendure Server/Worker пройдено;
+- [x] запуск із чистого checkout перевірено з окремою БД й мінімальними demo-даними; відмінності портів і codegen описані у звіті.
 
 Після цього зробити git tag або milestone commit на кштал:
 
