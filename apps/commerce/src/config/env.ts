@@ -17,6 +17,11 @@ const envSchema = z
   .object({
     APP_ENV: z.enum(["dev", "production", "test"]).default("dev"),
 
+    ALLOW_DEMO_SEED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+
     PORT: optionalPort,
     VENDURE_SERVER_PORT: port.default(3000),
     VENDURE_WORKER_HEALTH_PORT: port.default(3020),

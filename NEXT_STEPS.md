@@ -30,8 +30,9 @@
 - [x] Коренева команда `pnpm run test:e2e` проходить через Turbo: **5 successful, 5 total**; E2E виконується з `cache bypass`.
 - [x] Налаштовано lint для всіх трьох пакетів, перевірку форматування та README запуску.
 - [x] Чисту копію перевірено з окремою PostgreSQL, зібраними Server/Worker і трьома E2E; див. `docs/clean-check-verification.md`.
+- [x] Завершено мінімальний `seed:demo`: початкові налаштування, товар/variant, options, facet і колекція; guards, підтвердження БД, транзакції та захист від паралельних запусків. Інтеграційний прогін — 11 passed, усередині нього 3 cart E2E; див. `docs/demo-seed.md`.
 
-**Межа готовності:** SSR/cart flow перевірено у чистій копії зі зібраними storefront і Vendure Server/Worker та окремою БД. Форматування, lint, typecheck, codegen і builds пройдені; публічну збірку основної копії перевірено на значення секретів. Vendure працював із `APP_ENV=dev`; production-конфігурація, HTTPS/reverse proxy та deployment у Docker/Dokploy залишаються відкритими. Demo-дані створено через Admin API, автоматичного seed у репозиторії ще немає.
+**Межа готовності:** SSR/cart flow перевірено у чистій копії зі зібраними storefront і Vendure Server/Worker та окремою БД. Форматування, lint, typecheck, codegen і builds пройдені; публічну збірку основної копії перевірено на значення секретів. Vendure працював із `APP_ENV=dev`; production-конфігурація, HTTPS/reverse proxy та deployment у Docker/Dokploy залишаються відкритими. Початкову ручну підготовку замінює мінімальний `seed:demo`: див. `docs/demo-seed.md`.
 
 ## 1. Мета поточного етапу
 
@@ -294,7 +295,7 @@ pnpm run test:e2e
 - Playwright запускає `.output/server/index.mjs` через Node з `--env-file=.env` на порту `3002`; порт має бути вільним, `reuseExistingServer: false`.
 - Тести працюють у Chromium, одним worker, без retries. Trace і video вимкнено; screenshot зберігається при помилці.
 - Test results, reports і auth artifacts виключені з Git.
-- Браузерні сесії ізольовані, але база спільна локальна: кожен запуск створює незавершені кошики. Окрема тестова БД, автоматичний seed і cleanup ще не налаштовані.
+- У звичайному `test:e2e` база спільна локальна: кожен запуск створює незавершені кошики без cleanup. Окремий `test:seed` створює власну тимчасову БД, застосовує міграції, перевіряє seed і видаляє її; має опційний прогін E2E.
 - Останній наданий результат: **3 passed**, Turbo — **5 successful, 5 total**.
 
 Перед deployment окремо перевірити Origin за reverse proxy та HTTPS/cookie flow; локальний тест не підтверджує ці налаштування.
@@ -400,7 +401,7 @@ feat: validate SolidStart and Vendure foundation
 
 1. привести repo scripts і CI до стабільного стану;
 2. доповнити вже наявну runtime environment validation для нових інтеграцій;
-3. оформити повноцінні migrations і seed v1;
+3. мінімальний `seed:demo` реалізовано; розширений seed v1 із 10 товарами, promotions та checkout-конфігурацією залишається наступною задачею;
 4. завершити Vendure configuration;
 5. створити storefront shell;
 6. доповнити вже підключений GraphQL Code Generator: Turbo pipeline і відтворювана генерація в CI;

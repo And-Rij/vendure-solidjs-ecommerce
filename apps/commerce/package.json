@@ -15,10 +15,13 @@
     "start:worker": "node ./dist/index-worker.js",
     "start": "vendure start all",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "seed:demo": "node ./dist/scripts/seed-demo.js",
+    "test:seed": "node --test tests/seed-demo.test.mjs"
   },
   "dependencies": {
     "@vendure/asset-server-plugin": "3.7.3",
+    "@vendure/common": "3.7.3",
     "@vendure/core": "3.7.3",
     "@vendure/dashboard": "3.7.3",
     "@vendure/email-plugin": "3.7.3",

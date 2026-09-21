@@ -42,7 +42,7 @@ docker compose version
 pnpm install --frozen-lockfile
 ```
 
-Локальний запуск із чистого checkout перевірено з окремою БД та мінімальними demo-даними: [звіт і межі перевірки](./docs/clean-check-verification.md). Автоматичного seed немає, демонстраційні дані потрібно створити вручну. Створіть env-файли перед build: Dashboard завантажує Vendure config і потребує його змінних навіть під час збірки.
+Локальний запуск із чистого checkout перевірено з окремою БД та мінімальними demo-даними: [звіт і межі перевірки](./docs/clean-check-verification.md). Для повторення каталогу тепер є [seed:demo](./docs/demo-seed.md). Створіть env-файли перед build: Dashboard завантажує Vendure config і потребує його змінних навіть під час збірки.
 
 ## Environment variables
 
@@ -207,9 +207,11 @@ Invoke-RestMethod http://localhost:3000/health
 Invoke-RestMethod http://localhost:3020/health
 ```
 
-## Демонстраційні дані: ручне налаштування
+## Демонстраційні дані
 
-Seed-скрипта ще немає. Migrations створюють схему, але не відтворюють наведений каталог. У Vendure Dashboard потрібно:
+Є повторюваний `seed:demo` для мінімального каталогу. Він створює початкові налаштування, один товар/variant, options, facet і колекцію, не скидаючи наявні price/stock. Після міграцій і build запусти його з явним дозволом і підтвердженням БД — [інструкція та перевірки](./docs/demo-seed.md). Для застосування правил колекцій потрібен звичайний Worker.
+
+Еквівалентне ручне налаштування у Vendure Dashboard:
 
 1. У default channel увімкнути українську мову (`uk`) і валюту UAH.
 2. Створити/перевірити країну Україна та зону Україна з цією країною. Призначити її default tax zone і default shipping zone каналу.
@@ -271,7 +273,7 @@ Turbo виконує залежні build/typecheck tasks; вони можуть
 
 Тести працюють у Chromium, з одним worker і без retries. Trace/video вимкнено; screenshot створюється при помилці. Test artifacts виключено з Git. Не виводь cookie/token у звіти.
 
-**Тести змінюють локальну базу:** кожен запуск створює незавершені гостьові кошики, але не оформлює покупки. Окремої тестової БД, автоматичного seed та cleanup ще немає. Не направляй цей набір на реальний магазин.
+**Тести змінюють локальну базу:** звичайний `test:e2e` створює незавершені гостьові кошики, але не оформлює покупки, й не має автоматичного cleanup. Не направляй цей набір на реальний магазин. Окремий інтеграційний [test:seed](./docs/demo-seed.md) перевіряє seed у власній тимчасовій БД із cleanup та опційним прогоном cart E2E.
 
 Якщо змінені тільки тести й production-збірка актуальна, швидкий запуск без Turbo:
 
@@ -331,4 +333,4 @@ pnpm --filter @karpaty-gear/commerce start:worker
 
 [NEXT_STEPS.md](./NEXT_STEPS.md) містить актуальний checklist, [PROJECT_PLAN.md](./PROJECT_PLAN.md) — повну архітектуру, [product brief](./docs/product-brief.md) — scope магазину.
 
-Stage 0 перевірено локально: чистий checkout, lint/format/typecheck, зібраний стек, міграція окремої БД та 3 cart E2E пройдені; setup/ADR і перевірку публічної збірки на секрети виконано. CI, відтворюваний seed, offline codegen schema, production-конфігурація та Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.
+Stage 0 перевірено локально: чистий checkout, lint/format/typecheck, зібраний стек, міграція окремої БД та 3 cart E2E пройдені; setup/ADR і перевірку публічної збірки на секрети виконано. Мінімальний відтворюваний seed реалізовано. CI, розширений seed-каталог із product brief, offline codegen schema, production-конфігурація та Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.

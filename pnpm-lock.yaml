@@ -41,6 +41,9 @@ importers:
       '@vendure/asset-server-plugin':
         specifier: 3.7.3
         version: 3.7.3(supports-color@7.2.0)
+      '@vendure/common':
+        specifier: 3.7.3
+        version: 3.7.3
       '@vendure/core':
         specifier: 3.7.3
         version: 3.7.3(pg@8.23.0)(supports-color@7.2.0)(ts-morph@21.0.1)(ts-node@10.9.2(@types/node@26.4.1)(typescript@5.8.2))(typescript@5.8.2)
