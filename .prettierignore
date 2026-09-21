@@ -1,0 +1,34 @@
+# Dependencies and caches
+**/node_modules/
+**/.turbo/
+**/.nitro/
+**/.tanstack/
+**/.vendure/
+.pnpm-store/
+
+# Build output
+**/.output/
+**/dist/
+**/build/
+**/coverage/
+
+# Generated GraphQL
+packages/shop-api/src/generated/
+apps/commerce/src/gql/
+
+# Runtime assets and generated emails
+apps/commerce/static/assets/
+apps/commerce/static/email/test-emails/
+
+# Playwright
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.auth/
+
+# Local environment and lockfile
+**/.env*
+pnpm-lock.yaml
+
+# Vendure Handlebars/MJML email templates
+apps/commerce/static/email/templates/**/*.hbs

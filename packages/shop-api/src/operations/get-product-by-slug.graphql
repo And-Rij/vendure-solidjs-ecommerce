@@ -1,0 +1,24 @@
+query GetProductBySlug($slug: String!) {
+  product(slug: $slug) {
+    id
+    name
+    slug
+    description
+    variants {
+      id
+      name
+      sku
+      currencyCode
+      priceWithTax
+      stockLevel
+      options {
+        code
+        name
+        group {
+          code
+          name
+        }
+      }
+    }
+  }
+}
