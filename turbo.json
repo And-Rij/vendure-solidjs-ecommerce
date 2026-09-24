@@ -3,7 +3,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".output/**", "dist/**"]
     },
@@ -17,7 +17,26 @@
       "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["^typecheck", "^codegen"]
+    },
+    "codegen": {
+      "inputs": [
+        "codegen.ts",
+        "schema/**",
+        "src/operations/**",
+        "package.json"
+      ],
+      "outputs": ["src/generated/**"]
+    },
+    "codegen:check": {
+      "inputs": [
+        "codegen.ts",
+        "schema/**",
+        "src/operations/**",
+        "src/generated/**",
+        "package.json"
+      ],
+      "outputs": []
     },
     "dev": {
       "cache": false,

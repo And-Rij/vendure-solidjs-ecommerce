@@ -30,7 +30,7 @@ Turborepo керує порядком виконання package scripts і ке
 - Monorepo не означає один runtime: storefront, Vendure Server і Worker запускаються окремо.
 - Кореневий `.env` призначений для Compose; застосунки мають окремі env-файли.
 - Кеш Turbo потребує коректних inputs та outputs. У CI слід окремо перевірити врахування змінних, переданих через середовище, а не `.env`.
-- Зараз codegen запускається вручну й потребує доступного development Shop API. Підключення до Turbo та вибір schema source для CI залишаються окремою задачею.
+- Codegen використовує зафіксований Shop schema snapshot. Turbo запускає його перед storefront build/typecheck; snapshot оновлюємо офлайн із Vendure config після змін schema.
 - Відтворення за README з чистого checkout ще має бути перевірене; наявність lockfile сама по собі цього не доводить.
 
 ## Alternatives considered

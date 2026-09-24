@@ -1,9 +1,22 @@
 # Що робити зараз
 
-> Поточний milestone: **Stage 0 — Foundation spike**  
+> Поточний milestone: **Stage 1 — Foundation і commerce baseline**
 > Детальна архітектура: [PROJECT_PLAN.md](./PROJECT_PLAN.md)  
 > Статус: **Stage 0 перевірено локально: чистий checkout, форматування, lint, typecheck, builds, міграція порожньої БД і 3 E2E на зібраному стеку пройдені. Production deployment ще не перевірений.**  
-> Останнє оновлення: **2026-09-21**.
+> Останнє оновлення: **2026-09-24**.
+
+## Stage 1 — наступні задачі
+
+- [x] GraphQL Codegen використовує versioned Shop schema; Turbo запускає генерацію перед storefront build/typecheck без запущеного API.
+- [ ] CI автоматично перевіряє format, lint, typecheck, build, Codegen і тести.
+- [ ] Розширити seed до 10 товарів із різними залишками, promotion і checkout settings.
+- [ ] Завершити demo-доставку й оплату у Vendure configuration.
+- [ ] Створити storefront shell: layout, header, footer, навігація.
+- [ ] Розвинути каталог: сторінки колекцій, список товарів і PDP.
+
+Перед deployment окремо перевірити production-конфігурацію, Docker/Dokploy, HTTPS і cookies за reverse proxy.
+
+## Stage 0 — завершений фундамент
 
 ### Поточна точка
 
@@ -215,13 +228,13 @@ Date: YYYY-MM-DD
 - [x] залишити spike без design system, складної gallery та повного catalog UI.
 - [x] усунути dev-помилку імпорту `@jridgewell/resolve-uri` через `optimizeDeps.include: ["@solidjs/start > @jridgewell/trace-mapping"]`.
 
-Поточна генерація типів потребує запущеного Vendure:
+Поточна генерація типів використовує versioned Shop schema без запущеного Vendure:
 
 ```powershell
-pnpm --filter @karpaty-gear/shop-api codegen
+pnpm run codegen
 ```
 
-Окремі задачі для відтворюваної збірки: підключити `codegen` до Turbo pipeline та визначити спосіб доступу до schema у CI (запущений API або versioned schema snapshot). Вони ще не виконані.
+Codegen підключено до Turbo pipeline; schema snapshot зберігається у `packages/shop-api/schema/shop.graphql`. Перевірку CI налаштувати в наступному кроці Stage 1.
 
 Мінімальні файли spike:
 

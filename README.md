@@ -174,10 +174,10 @@ pnpm --filter @karpaty-gear/commerce dev:dashboard
 pnpm --filter @karpaty-gear/commerce build:dashboard
 ```
 
-Увійди власними admin credentials та налаштуй демонстраційний каталог за наступним розділом. Після запуску Vendure згенеруй Shop API types:
+Увійди власними admin credentials та налаштуй демонстраційний каталог за наступним розділом. Shop API types генеруються із зафіксованої schema; Vendure для цього не потрібен:
 
 ```powershell
-pnpm --filter @karpaty-gear/shop-api codegen
+pnpm run codegen
 ```
 
 Після цього запусти storefront:
@@ -226,14 +226,16 @@ Invoke-RestMethod http://localhost:3020/health
 ## GraphQL Code Generator
 
 ```powershell
-pnpm --filter @karpaty-gear/shop-api codegen
+pnpm run codegen
+pnpm run codegen:check
 ```
 
-- Schema зараз завантажується з `http://localhost:3000/shop-api`; Vendure має працювати з дозволеною introspection (`APP_ENV=dev`).
+- Schema для генерації читається з `packages/shop-api/schema/shop.graphql`; запущений Vendure і база даних не потрібні.
 - Operations: `packages/shop-api/src/operations/**/*.graphql`.
 - Generated output: `packages/shop-api/src/generated/`; його не редагувати вручну.
 - Публічні exports: `packages/shop-api/src/index.ts`.
-- Після зміни operations або API schema повтори codegen. Turbo build поки не запускає його автоматично; schema snapshot для CI ще не створено.
+- Після зміни operations запусти `pnpm run codegen`. Turbo запускає codegen перед storefront build і typecheck.
+- Після зміни Vendure version, plugin API extensions або custom fields спочатку збери commerce і онови snapshot: `pnpm --filter @karpaty-gear/commerce build:server`, тоді `pnpm --filter @karpaty-gear/commerce schema:shop`, тоді `pnpm run codegen`. Для експорту потрібні валідні `apps/commerce/.env`, але сервер і PostgreSQL запускати не потрібно. Закоміть snapshot і generated-файли разом.
 
 ## Перевірки якості
 
@@ -333,4 +335,4 @@ pnpm --filter @karpaty-gear/commerce start:worker
 
 [NEXT_STEPS.md](./NEXT_STEPS.md) містить актуальний checklist, [PROJECT_PLAN.md](./PROJECT_PLAN.md) — повну архітектуру, [product brief](./docs/product-brief.md) — scope магазину.
 
-Stage 0 перевірено локально: чистий checkout, lint/format/typecheck, зібраний стек, міграція окремої БД та 3 cart E2E пройдені; setup/ADR і перевірку публічної збірки на секрети виконано. Мінімальний відтворюваний seed реалізовано. CI, розширений seed-каталог із product brief, offline codegen schema, production-конфігурація та Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.
+Stage 0 перевірено локально: чистий checkout, lint/format/typecheck, зібраний стек, міграція окремої БД та 3 cart E2E пройдені; setup/ADR і перевірку публічної збірки на секрети виконано. Мінімальний відтворюваний seed реалізовано. Codegen використовує versioned Shop schema і Turbo pipeline. CI, розширений seed-каталог із product brief, production-конфігурація та Docker/Dokploy deployment ще не налаштовані. Зовнішній пошук, брокери черг, AI, notifications та observability залишаються майбутніми етапами.

@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { setTimeout as sleep } from "node:timers/promises";
 
 async function main(): Promise<void> {
   if (env.APP_ENV === "production" || process.env.NODE_ENV === "production") {
@@ -47,6 +48,7 @@ async function main(): Promise<void> {
       try {
         await runner.release();
       } finally {
+        await sleep(2_000);
         await worker.app.close();
       }
     }
