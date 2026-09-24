@@ -64,11 +64,13 @@ jobs:
         run: pnpm --filter @karpaty-gear/commerce test:seed
         env:
           ALLOW_DEMO_SEED_TEST: "true"
-          DB_HOST: 127.0.0.1
-          DB_PORT: "6544"
-          DB_NAME: postgres
-          DB_USERNAME: vendure
-          DB_PASSWORD: ci-postgres-password
-          SUPERADMIN_USERNAME: ci-admin
-          SUPERADMIN_PASSWORD: ci-superadmin-password-1234
-          APP_ENV: test
+
+env:
+  APP_ENV: test
+  DB_HOST: 127.0.0.1
+  DB_PORT: "6544"
+  DB_NAME: postgres
+  DB_USERNAME: vendure
+  DB_PASSWORD: ci-postgres-password
+  SUPERADMIN_USERNAME: ci-admin
+  SUPERADMIN_PASSWORD: ci-superadmin-password-1234
