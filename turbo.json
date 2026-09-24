@@ -5,7 +5,17 @@
     "build": {
       "dependsOn": ["^build", "^codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".output/**", "dist/**"]
+      "outputs": [".output/**", "dist/**"],
+      "env": [
+        "APP_ENV",
+        "DB_HOST",
+        "DB_PORT",
+        "DB_NAME",
+        "DB_USERNAME",
+        "DB_PASSWORD",
+        "SUPERADMIN_USERNAME",
+        "SUPERADMIN_PASSWORD"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"],
