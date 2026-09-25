@@ -10,8 +10,8 @@
 - [x] GraphQL Codegen використовує versioned Shop schema; Turbo запускає генерацію перед storefront build/typecheck без запущеного API.
 - [x] CI перевіряє format, lint (пакети й root config), Codegen check, typecheck, build та seed + 3 cart E2E на тимчасовій PostgreSQL. Перший прогін GitHub Actions на `main` пройшов успішно (commit `c3bd852`).
 - [x] Розширити seed до 10 товарів із різними залишками та 8 категоріями; повторний запуск зберігає змінені вручну ціни й залишки.
-- [ ] Додати до seed одну promotion і demo checkout settings.
-- [ ] Завершити demo-доставку й оплату у Vendure configuration.
+- [x] Додати до seed одну автоматичну promotion і demo checkout settings.
+- [x] Завершити demo-доставку й тестову оплату у Vendure configuration.
 - [ ] Створити storefront shell: layout, header, footer, навігація.
 - [ ] Розвинути каталог: сторінки колекцій, список товарів і PDP.
 
@@ -415,7 +415,7 @@ feat: validate SolidStart and Vendure foundation
 
 1. привести repo scripts і CI до стабільного стану;
 2. доповнити вже наявну runtime environment validation для нових інтеграцій;
-3. `seed:demo` створює 10 товарів і 8 категорій; promotion та checkout-конфігурація залишаються наступною задачею;
+3. `seed:demo` створює 10 товарів, 8 категорій, promotion і demo checkout-конфігурацію;
 4. завершити Vendure configuration;
 5. створити storefront shell;
 6. доповнити вже підключений GraphQL Code Generator: Turbo pipeline і відтворювана генерація в CI;

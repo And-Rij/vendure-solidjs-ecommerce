@@ -16,6 +16,7 @@ import {
 } from "@vendure/core";
 import type { VendureWorker } from "@vendure/core";
 import { seedDemoCatalog } from "./seed-catalog";
+import { seedDemoCheckout } from "./seed-checkout";
 
 type App = VendureWorker["app"];
 
@@ -206,4 +207,5 @@ export async function seedDemo(app: App): Promise<void> {
     languageCode: LanguageCode.uk,
   });
   await seedDemoCatalog(app, catalogCtx, taxCategoryId);
+  await seedDemoCheckout(app, catalogCtx);
 }

@@ -80,7 +80,10 @@ test(
     (SELECT count(*) FROM facet_value) AS values,
     (SELECT count(*) FROM product_option_group) AS groups,
     (SELECT count(*) FROM product_option) AS options,
-    (SELECT count(*) FROM collection) AS collections`)
+    (SELECT count(*) FROM collection) AS collections,
+    (SELECT count(*) FROM promotion) AS promotions,
+    (SELECT count(*) FROM shipping_method) AS shipping_methods,
+    (SELECT count(*) FROM payment_method) AS payment_methods`)
       ).rows[0];
     const demoVariantId = async () => {
       const result = await db.query(
@@ -134,6 +137,9 @@ test(
           assert.equal(snapshot.groups, "6");
           assert.equal(snapshot.options, "8");
           assert.equal(snapshot.collections, "9"); // root + 8 categories
+          assert.equal(snapshot.promotions, "1");
+          assert.equal(snapshot.shipping_methods, "2");
+          assert.equal(snapshot.payment_methods, "1");
           const channel = (
             await db.query("SELECT * FROM channel WHERE code = $1", [
               "__default_channel__",
@@ -441,6 +447,95 @@ test(
                 );
                 return true;
               });
+              let authToken;
+              async function shop(query, variables = {}) {
+                const response = await fetch(
+                  "http://localhost:3101/shop-api?languageCode=uk",
+                  {
+                    method: "POST",
+                    headers: {
+                      "content-type": "application/json",
+                      ...(authToken
+                        ? { authorization: `Bearer ${authToken}` }
+                        : {}),
+                    },
+                    body: JSON.stringify({ query, variables }),
+                  },
+                );
+                authToken =
+                  response.headers.get("vendure-auth-token") ?? authToken;
+                const result = await response.json();
+                assert.equal(
+                  result.errors,
+                  undefined,
+                  JSON.stringify(result.errors),
+                );
+                return result.data;
+              }
+              const product = await shop(
+                '{ product(slug:"polonyna-trek") { variants { id } } }',
+              );
+              const added = await shop(
+                "mutation($id: ID!) { addItemToOrder(productVariantId:$id,quantity:1) { __typename ... on Order { subTotalWithTax totalWithTax discounts { amount } } } }",
+                { id: product.product.variants[0].id },
+              );
+              assert.equal(added.addItemToOrder.__typename, "Order");
+              assert.ok(added.addItemToOrder.discounts.length > 0);
+              assert.ok(added.addItemToOrder.totalWithTax < 899900);
+              const customer = await shop(
+                'mutation { setCustomerForOrder(input:{firstName:"Тест",lastName:"Покупець",emailAddress:"checkout-seed@example.test"}) { __typename } }',
+              );
+              assert.equal(customer.setCustomerForOrder.__typename, "Order");
+              const address = await shop(
+                'mutation { setOrderShippingAddress(input:{streetLine1:"Хрещатик 1",city:"Київ",postalCode:"01001",countryCode:"UA"}) { __typename } }',
+              );
+              assert.equal(address.setOrderShippingAddress.__typename, "Order");
+              const methods = await shop(
+                "{ eligibleShippingMethods { id code priceWithTax } eligiblePaymentMethods { code isEligible } }",
+              );
+              assert.deepEqual(
+                methods.eligibleShippingMethods
+                  .map((method) => method.code)
+                  .sort(),
+                ["demo-express", "demo-standard"],
+              );
+              assert.deepEqual(
+                methods.eligibleShippingMethods
+                  .map((method) => method.priceWithTax)
+                  .sort((a, b) => a - b),
+                [8000, 15000],
+              );
+              assert.ok(
+                methods.eligiblePaymentMethods.some(
+                  (method) =>
+                    method.code === "demo-test-payment" && method.isEligible,
+                ),
+              );
+              const standard = methods.eligibleShippingMethods.find(
+                (method) => method.code === "demo-standard",
+              );
+              const shipped = await shop(
+                "mutation($id: ID!) { setOrderShippingMethod(shippingMethodId:[$id]) { __typename ... on Order { shippingWithTax totalWithTax } } }",
+                { id: standard.id },
+              );
+              assert.equal(shipped.setOrderShippingMethod.__typename, "Order");
+              assert.equal(
+                shipped.setOrderShippingMethod.shippingWithTax,
+                8000,
+              );
+              const transition = await shop(
+                'mutation { transitionOrderToState(state:"ArrangingPayment") { __typename ... on Order { state } } }',
+              );
+              assert.equal(
+                transition.transitionOrderToState.state,
+                "ArrangingPayment",
+              );
+              const paid = await shop(
+                'mutation { addPaymentToOrder(input:{method:"demo-test-payment",metadata:{}}) { __typename ... on Order { state active payments { state } } } }',
+              );
+              assert.equal(paid.addPaymentToOrder.__typename, "Order");
+              assert.equal(paid.addPaymentToOrder.state, "PaymentSettled");
+              assert.equal(paid.addPaymentToOrder.active, false);
               const storefront = new URL("../../storefront/", import.meta.url);
               const result = await exec(
                 process.execPath,

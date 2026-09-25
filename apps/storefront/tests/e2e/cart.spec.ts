@@ -30,7 +30,7 @@ test("гостьовий кошик зберігається після онов
   await expect(orderCode).toHaveText(/^Код замовлення:\s*\S+$/);
   await expect(quantity).toHaveText(/^Кількість товарів:\s*1$/);
 
-  const expectedTotal = /^Сума:\s*8\s?999[,.]00\s*(?:₴|грн\.?|UAH)$/;
+  const expectedTotal = /^Сума:\s*8\s?099[,.]10\s*(?:₴|грн\.?|UAH)$/;
   await expect(total).toHaveText(expectedTotal);
 
   const codeBeforeReload = await orderCode.innerText();
@@ -144,7 +144,7 @@ test("неіснуючий variant ID не змінює кошик", async ({ pa
   await expect(orderCode).toHaveText(/^Код замовлення:\s*\S+$/);
   await expect(quantity).toHaveText(/^Кількість товарів:\s*1$/);
 
-  const expectedTotal = /^Сума:\s*8\s?999[,.]00\s*(?:₴|грн\.?|UAH)$/;
+  const expectedTotal = /^Сума:\s*8\s?099[,.]10\s*(?:₴|грн\.?|UAH)$/;
   await expect(total).toHaveText(expectedTotal);
 
   const originalCode = await orderCode.innerText();
