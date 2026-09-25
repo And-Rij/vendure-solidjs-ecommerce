@@ -10,6 +10,7 @@ import pg from "pg";
 
 const exec = promisify(execFile);
 const cwd = new URL("../", import.meta.url);
+const demoSku = "KG-TENT-POL-2P-FST";
 
 test(
   "demo seed: empty DB, repeat, preservation, conflicts and guards",
@@ -81,6 +82,14 @@ test(
     (SELECT count(*) FROM product_option) AS options,
     (SELECT count(*) FROM collection) AS collections`)
       ).rows[0];
+    const demoVariantId = async () => {
+      const result = await db.query(
+        "SELECT id FROM product_variant WHERE sku=$1",
+        [demoSku],
+      );
+      assert.equal(result.rows.length, 1);
+      return result.rows[0].id;
+    };
     let created = false;
     await admin.connect();
     try {
@@ -115,15 +124,16 @@ test(
         "const {runMigrations}=require('@vendure/core'); const {config}=require('./dist/vendure-config'); runMigrations(config).catch(e=>{console.error(e.message);process.exitCode=1})",
       ]);
       await t.test(
-        "creates configuration and complete demo product from empty schema",
+        "creates configuration, 10 products and category collections from empty schema",
         async () => {
           assert.match(await node(seedArgs), /Demo seed completed/);
           const snapshot = await counts();
-          assert.equal(snapshot.products, "1");
-          assert.equal(snapshot.variants, "1");
-          assert.equal(snapshot.groups, "2");
-          assert.equal(snapshot.options, "2");
-          assert.equal(snapshot.collections, "2"); // root + Namety
+          assert.equal(snapshot.products, "10");
+          assert.equal(snapshot.variants, "10");
+          assert.equal(snapshot.values, "8");
+          assert.equal(snapshot.groups, "6");
+          assert.equal(snapshot.options, "8");
+          assert.equal(snapshot.collections, "9"); // root + 8 categories
           const channel = (
             await db.query("SELECT * FROM channel WHERE code = $1", [
               "__default_channel__",
@@ -140,17 +150,26 @@ test(
           assert.equal(
             (
               await db.query(
-                'SELECT price FROM product_variant_price WHERE "currencyCode"=$1',
-                ["UAH"],
+                'SELECT price FROM product_variant_price WHERE "currencyCode"=$1 AND "variantId"=$2',
+                ["UAH", await demoVariantId()],
               )
             ).rows[0].price,
             899900,
           );
           assert.equal(
-            (await db.query('SELECT "stockOnHand" FROM stock_level')).rows[0]
-              .stockOnHand,
+            (
+              await db.query(
+                'SELECT "stockOnHand" FROM stock_level WHERE "productVariantId"=$1',
+                [await demoVariantId()],
+              )
+            ).rows[0].stockOnHand,
             12,
           );
+          const unavailable = await db.query(
+            'SELECT "stockOnHand" FROM stock_level WHERE "productVariantId"=(SELECT id FROM product_variant WHERE sku=$1)',
+            ["KG-BAG-PETR-REG"],
+          );
+          assert.equal(unavailable.rows[0].stockOnHand, 0);
         },
       );
       await t.test(
@@ -159,8 +178,14 @@ test(
           const before = await counts();
           const ids = (await db.query("SELECT id, sku FROM product_variant"))
             .rows;
-          await db.query("UPDATE product_variant_price SET price = 777700");
-          await db.query('UPDATE stock_level SET "stockOnHand" = 7');
+          await db.query(
+            'UPDATE product_variant_price SET price = 777700 WHERE "variantId"=$1',
+            [await demoVariantId()],
+          );
+          await db.query(
+            'UPDATE stock_level SET "stockOnHand" = 7 WHERE "productVariantId"=$1',
+            [await demoVariantId()],
+          );
           assert.match(await node(seedArgs), /already exists/);
           assert.deepEqual(await counts(), before);
           assert.deepEqual(
@@ -168,13 +193,21 @@ test(
             ids,
           );
           assert.equal(
-            (await db.query("SELECT price FROM product_variant_price LIMIT 1"))
-              .rows[0].price,
+            (
+              await db.query(
+                'SELECT price FROM product_variant_price WHERE "variantId"=$1',
+                [await demoVariantId()],
+              )
+            ).rows[0].price,
             777700,
           );
           assert.equal(
-            (await db.query('SELECT "stockOnHand" FROM stock_level')).rows[0]
-              .stockOnHand,
+            (
+              await db.query(
+                'SELECT "stockOnHand" FROM stock_level WHERE "productVariantId"=$1',
+                [await demoVariantId()],
+              )
+            ).rows[0].stockOnHand,
             7,
           );
         },
@@ -182,26 +215,38 @@ test(
       await t.test(
         "upgrades legacy variant without options without resetting price/stock",
         async () => {
-          await db.query("DELETE FROM product_variant_options_product_option");
+          await db.query(
+            'DELETE FROM product_variant_options_product_option WHERE "productVariantId"=$1',
+            [await demoVariantId()],
+          );
           assert.match(await node(seedArgs), /already exists/);
           assert.equal(
             Number(
               (
                 await db.query(
-                  "SELECT count(*) FROM product_variant_options_product_option",
+                  'SELECT count(*) FROM product_variant_options_product_option WHERE "productVariantId"=$1',
+                  [await demoVariantId()],
                 )
               ).rows[0].count,
             ),
             2,
           );
           assert.equal(
-            (await db.query("SELECT price FROM product_variant_price LIMIT 1"))
-              .rows[0].price,
+            (
+              await db.query(
+                'SELECT price FROM product_variant_price WHERE "variantId"=$1',
+                [await demoVariantId()],
+              )
+            ).rows[0].price,
             777700,
           );
           assert.equal(
-            (await db.query('SELECT "stockOnHand" FROM stock_level')).rows[0]
-              .stockOnHand,
+            (
+              await db.query(
+                'SELECT "stockOnHand" FROM stock_level WHERE "productVariantId"=$1',
+                [await demoVariantId()],
+              )
+            ).rows[0].stockOnHand,
             7,
           );
         },
@@ -211,7 +256,8 @@ test(
         async () => {
           const link = (
             await db.query(
-              'DELETE FROM product_variant_options_product_option WHERE "productOptionId" = (SELECT min("productOptionId") FROM product_variant_options_product_option) RETURNING *',
+              'DELETE FROM product_variant_options_product_option WHERE "productVariantId"=$1 AND "productOptionId" = (SELECT min("productOptionId") FROM product_variant_options_product_option WHERE "productVariantId"=$1) RETURNING *',
+              [await demoVariantId()],
             )
           ).rows[0];
           try {
@@ -220,7 +266,8 @@ test(
               Number(
                 (
                   await db.query(
-                    "SELECT count(*) FROM product_variant_options_product_option",
+                    'SELECT count(*) FROM product_variant_options_product_option WHERE "productVariantId"=$1',
+                    [await demoVariantId()],
                   )
                 ).rows[0].count,
               ),
@@ -250,17 +297,19 @@ test(
         "rejects SKU owned by another product before creating anything",
         async () => {
           const before = await counts();
-          await db.query("UPDATE product_translation SET slug=$1", [
-            "different-product",
-          ]);
+          await db.query(
+            "UPDATE product_translation SET slug=$1 WHERE slug=$2",
+            ["different-product", "polonyna-trek"],
+          );
           assert.match(
             await node(seedArgs, {}, 1),
             /SKU belongs to another product/,
           );
           assert.deepEqual(await counts(), before);
-          await db.query("UPDATE product_translation SET slug=$1", [
-            "polonyna-trek",
-          ]);
+          await db.query(
+            "UPDATE product_translation SET slug=$1 WHERE slug=$2",
+            ["polonyna-trek", "different-product"],
+          );
         },
       );
       await t.test("rejects duplicate tax category", async () => {
@@ -289,8 +338,14 @@ test(
         await t.test(
           "seeded Shop API, collection jobs and storefront cart E2E",
           async () => {
-            await db.query("UPDATE product_variant_price SET price = 899900");
-            await db.query('UPDATE stock_level SET "stockOnHand" = 12');
+            await db.query(
+              'UPDATE product_variant_price SET price = 899900 WHERE "variantId"=$1',
+              [await demoVariantId()],
+            );
+            await db.query(
+              'UPDATE stock_level SET "stockOnHand" = 12 WHERE "productVariantId"=$1',
+              [await demoVariantId()],
+            );
             const children = [];
             const logs = [];
             function start(file, overrides) {
@@ -344,17 +399,34 @@ test(
                     headers: { "content-type": "application/json" },
                     body: JSON.stringify({
                       query:
-                        '{ product(slug:"polonyna-trek") { name variants { sku priceWithTax currencyCode stockLevel } } collection(slug:"namety") { productVariants { totalItems } } }',
+                        '{ product(slug:"polonyna-trek") { name variants { sku priceWithTax currencyCode stockLevel } } unavailable: product(slug:"petros-down-minus-5") { variants { stockLevel } } tents: collection(slug:"namety") { productVariants { totalItems } } bags: collection(slug:"spalnyky") { productVariants { totalItems } } pads: collection(slug:"kylymky") { productVariants { totalItems } } daypacks: collection(slug:"odnodenni-riukzaky") { productVariants { totalItems } } trekking: collection(slug:"trekinhovi-riukzaky") { productVariants { totalItems } } stoves: collection(slug:"palnyky") { productVariants { totalItems } } cookware: collection(slug:"posud") { productVariants { totalItems } } lighting: collection(slug:"osvitlennia") { productVariants { totalItems } } }',
                     }),
                   },
                 );
                 const result = await response.json();
+                if (result.errors) return false;
+                const expectedCounts = {
+                  tents: 2,
+                  bags: 2,
+                  pads: 1,
+                  daypacks: 1,
+                  trekking: 1,
+                  stoves: 1,
+                  cookware: 1,
+                  lighting: 1,
+                };
                 if (
-                  result.errors ||
-                  result.data.collection?.productVariants.totalItems !== 1
+                  Object.entries(expectedCounts).some(
+                    ([key, count]) =>
+                      result.data[key]?.productVariants.totalItems !== count,
+                  )
                 )
                   return false;
                 assert.equal(result.data.product.name, "Полонина Trek");
+                assert.equal(
+                  result.data.unavailable.variants[0].stockLevel,
+                  "OUT_OF_STOCK",
+                );
                 assert.equal(
                   result.data.product.variants[0].priceWithTax,
                   899900,

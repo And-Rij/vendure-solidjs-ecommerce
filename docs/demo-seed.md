@@ -1,6 +1,6 @@
-# Demo seed: мінімальний каталог
+# Demo seed: каталог із 10 товарів
 
-Команда відтворює поточний foundation-каталог з порожньої **мігрованої** БД. Це один товар для SSR/cart flow, не майбутній розширений каталог із 10 товарів, promotions та shipping/payment methods із product brief.
+Команда відтворює демонстраційний каталог із порожньої **мігрованої** БД. Вона створює 10 товарів із різними залишками та 8 категорій. Promotion і demo shipping/payment methods залишаються наступними кроками.
 
 ## Що створюється
 
@@ -8,9 +8,9 @@
 - UAH як default currency, ціни з податком; інші доступні валюти зберігаються.
 - Країна UA, зона `Україна`, default tax/shipping zone.
 - Категорія `Standard`, загальна ставка ПДВ 20% для цієї зони.
-- Товар `polonyna-trek` / «Полонина Trek»; SKU `KG-TENT-POL-2P-FST`, початкова ціна 899900 копійок і залишок 12.
-- Опції `capacity / 2-person` і `color / forest`.
-- Публічний facet `category / tents` та колекція `namety`, яка відбирає товари за цим facet.
+- 10 товарів із [product brief](./product-brief.md), по одному variant на товар; у «Петрос Down -5» початковий залишок 0.
+- «Полонина Trek» зберігає SKU `KG-TENT-POL-2P-FST`, початкову ціну 899900 копійок, залишок 12 та опції `capacity / 2-person` і `color / forest`.
+- Публічний facet `category` з 8 значеннями та 8 колекцій, які відбирають товари за відповідним значенням. Колекція `namety` містить два намети.
 
 Зображення, акаунти покупців, замовлення та платежі seed не створює. Vendure bootstrap може ініціалізувати власні службові записи та superadmin із env.
 
@@ -47,7 +47,7 @@ node --env-file=C:/Projects/Pet-Projects/ecommerce-clean-check-lf/apps/commerce/
 
 ## Повторні запуски та конфлікти
 
-- Пошук за стабільними code/slug/SKU; повторний запуск не створює нових копій.
+- Пошук за стабільними code/slug/SKU; повторний запуск не створює нових копій товарів, опцій чи колекцій.
 - Наявні назви/описи, ціни, залишки та enabled state товарів/variant не перезаписуються. Відсутні зв'язки з demo facet/options додаються; старий мінімальний variant без options доповнюється.
 - Не змінюється валюта чи tax-inclusive mode непорожнього каталогу. Конфлікт іншої default zone, вимкненої країни, ставки не 20%, дублікати ключів, чужий SKU або несумісні options/collection filters завершують seed з помилкою.
 - PostgreSQL advisory lock блокує одночасні запуски цього seed у тій самій БД. Він не блокує редагування через Dashboard: не редагуй demo-дані одночасно з seed.
@@ -58,25 +58,25 @@ node --env-file=C:/Projects/Pet-Projects/ecommerce-clean-check-lf/apps/commerce/
 
 Тест дозволено лише для локального PostgreSQL на порту **6544**. Використовує credentials із переданого env, але не його DB_NAME: створює власну БД `vendure_seed_test_<random>`, застосовує міграції та видаляє **тільки її** у `finally`. Користувач PostgreSQL повинен мати право CREATE DATABASE. При аварійному завершенні процесу тестова БД може залишитися.
 
-З каталогу `apps/commerce`, після `build:server`:
+З кореня репозиторію, після `build:server`, із `DB_HOST=127.0.0.1`, `DB_PORT=6544` та credentials тимчасової PostgreSQL у середовищі:
 
 ```powershell
 $previousSeedTestPermission = $env:ALLOW_DEMO_SEED_TEST
 try {
   $env:ALLOW_DEMO_SEED_TEST = "true"
-  node --env-file=C:/Projects/Pet-Projects/ecommerce-clean-check-lf/apps/commerce/.env --test tests/seed-demo.test.mjs
+  pnpm --filter @karpaty-gear/commerce test:seed
 } finally {
   [Environment]::SetEnvironmentVariable("ALLOW_DEMO_SEED_TEST", $previousSeedTestPermission, "Process")
 }
 ```
 
-Перевіряються guards до підключення, порожня schema, повторний запуск, збереження вручну змінених price/stock, конфлікт ставки/чужого SKU/дубль категорії та advisory lock.
+Перевіряються guards до підключення, 10 товарів і 8 категорій у порожній schema, повторний запуск, збереження вручну змінених price/stock, конфлікт ставки/чужого SKU/дубль категорії та advisory lock.
 
-Додатково `SEED_TEST_E2E=true` вмикає перевірку Shop API, обробки колекції та трьох Playwright cart-тестів. Для неї спочатку збери storefront, встанови Chromium і звільни порти 3101, 3121, 3002. Тест запускає й зупиняє власні Server/Worker; використовує лише нову тестову БД. Після запуску прибери тимчасову змінну `SEED_TEST_E2E`.
+Додатково `SEED_TEST_E2E=true` вмикає перевірку Shop API, усіх 8 колекцій, недоступного variant та трьох Playwright cart-тестів. Для неї спочатку збери storefront, встанови Chromium і звільни порти 3101, 3121, 3002. Тест запускає й зупиняє власні Server/Worker; використовує лише нову тестову БД. Після запуску прибери тимчасову змінну `SEED_TEST_E2E`.
 
-## Перевірено 2026-09-21
+## Перевірено 2026-09-25
 
-- Повний прогін із `SEED_TEST_E2E=true`: **11 passed**, включно з батьківським тестом; усередині API/E2E-перевірки — **3 passed** у Playwright.
+- Повний прогін із `SEED_TEST_E2E=true`: **11 passed**, включно з батьківським тестом; усередині API/E2E-перевірки — **3 passed** у Playwright. Shop API повернув очікувану кількість товарів для кожної з 8 колекцій.
 - Старий variant без опцій доповнюється без скидання вручну змінених ціни й залишку. Конфліктні опції не перезаписуються.
 - Commerce Server/Worker/Dashboard і storefront успішно зібрані; TypeScript, ESLint і Prettier пройдені.
 - Тимчасові БД видалені після прогонів; основна БД не використовувалася.
