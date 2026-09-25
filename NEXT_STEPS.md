@@ -3,12 +3,12 @@
 > Поточний milestone: **Stage 1 — Foundation і commerce baseline**
 > Детальна архітектура: [PROJECT_PLAN.md](./PROJECT_PLAN.md)  
 > Статус: **Stage 0 перевірено локально: чистий checkout, форматування, lint, typecheck, builds, міграція порожньої БД і 3 E2E на зібраному стеку пройдені. Production deployment ще не перевірений.**  
-> Останнє оновлення: **2026-09-24**.
+> Останнє оновлення: **2026-09-25**.
 
 ## Stage 1 — наступні задачі
 
 - [x] GraphQL Codegen використовує versioned Shop schema; Turbo запускає генерацію перед storefront build/typecheck без запущеного API.
-- [ ] CI автоматично перевіряє format, lint, typecheck, build, Codegen і тести.
+- [x] CI налаштовано на format, lint (пакети й root config), Codegen check, typecheck, build та seed + 3 cart E2E на тимчасовій PostgreSQL. Перший прогін GitHub Actions ще потрібно підтвердити.
 - [ ] Розширити seed до 10 товарів із різними залишками, promotion і checkout settings.
 - [ ] Завершити demo-доставку й оплату у Vendure configuration.
 - [ ] Створити storefront shell: layout, header, footer, навігація.
@@ -234,7 +234,7 @@ Date: YYYY-MM-DD
 pnpm run codegen
 ```
 
-Codegen підключено до Turbo pipeline; schema snapshot зберігається у `packages/shop-api/schema/shop.graphql`. Перевірку CI налаштувати в наступному кроці Stage 1.
+Codegen підключено до Turbo pipeline; schema snapshot зберігається у `packages/shop-api/schema/shop.graphql`. CI перевіряє відповідність згенерованих файлів snapshot і operations через `codegen:check`.
 
 Мінімальні файли spike:
 

@@ -51,6 +51,9 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      - name: Lint root configuration
+        run: pnpm exec eslint eslint.config.mjs --max-warnings 0
+
       - name: Check generated GraphQL files
         run: pnpm run codegen:check
 
@@ -60,10 +63,17 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test demo seed
+      - name: Install Chromium for E2E
+        run: pnpm --filter @karpaty-gear/storefront exec playwright install --with-deps chromium
+
+      - name: Prepare storefront environment for E2E
+        run: cp apps/storefront/.env.example apps/storefront/.env
+
+      - name: Test demo seed and cart E2E
         run: pnpm --filter @karpaty-gear/commerce test:seed
         env:
           ALLOW_DEMO_SEED_TEST: "true"
+          SEED_TEST_E2E: "true"
 
 env:
   APP_ENV: test
