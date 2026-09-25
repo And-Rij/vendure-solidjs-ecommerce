@@ -8,7 +8,7 @@
 ## Stage 1 — наступні задачі
 
 - [x] GraphQL Codegen використовує versioned Shop schema; Turbo запускає генерацію перед storefront build/typecheck без запущеного API.
-- [x] CI налаштовано на format, lint (пакети й root config), Codegen check, typecheck, build та seed + 3 cart E2E на тимчасовій PostgreSQL. Перший прогін GitHub Actions ще потрібно підтвердити.
+- [x] CI перевіряє format, lint (пакети й root config), Codegen check, typecheck, build та seed + 3 cart E2E на тимчасовій PostgreSQL. Перший прогін GitHub Actions на `main` пройшов успішно (commit `c3bd852`).
 - [ ] Розширити seed до 10 товарів із різними залишками, promotion і checkout settings.
 - [ ] Завершити demo-доставку й оплату у Vendure configuration.
 - [ ] Створити storefront shell: layout, header, footer, навігація.
